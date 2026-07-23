@@ -12,7 +12,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const roleMiddleware = require("../middleware/roleMiddleware");
 
-const {loginLimiter} = require("../middleware/rateLimiter");
+const { loginLimiter } = require("../middleware/rateLimiter");
 
 router.post("/register",
     [
@@ -25,7 +25,13 @@ router.post("/register",
             .withMessage("Please enter a valid email"),
 
         body("password")
-            .isLength({ min: 6 })
+            .isStrongPassword({
+                minLength: 8,
+                minLowercase: 1,
+                minUppercase: 1,
+                minNumbers: 1,
+                minSymbols: 1
+            })
             .withMessage("Password must be at least 6 characters long"),
     ],
     registerUser
@@ -53,7 +59,7 @@ router.get("/admin", authMiddleware, roleMiddleware("Admin"), (req, res) => {
 },
 );
 
-router.get("/manager", authMiddleware, roleMiddleware("Admin","Manager"), (req, res) => {
+router.get("/manager", authMiddleware, roleMiddleware("Admin", "Manager"), (req, res) => {
     res.json({
         success: true,
         message: "Welcome Manager",
@@ -61,7 +67,7 @@ router.get("/manager", authMiddleware, roleMiddleware("Admin","Manager"), (req, 
 },
 );
 
-router.get("/user", authMiddleware, roleMiddleware("Admin","Manager","User"), (req, res) => {
+router.get("/user", authMiddleware, roleMiddleware("Admin", "Manager", "User"), (req, res) => {
     res.json({
         success: true,
         message: "Welcome User",
