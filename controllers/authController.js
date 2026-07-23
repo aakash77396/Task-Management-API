@@ -1,7 +1,11 @@
 const User = require("../models/User");
+const BlacklistToken = require("../models/blacklistTokenModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken")
 const { validationResult } = require("express-validator");
+
+const sendEmail = require("../utils/sendEmail");
+
 
 exports.registerUser = async (req, res) => {
     try {
@@ -38,6 +42,24 @@ exports.registerUser = async (req, res) => {
             email,
             password: hashedPassword,
         });
+
+        // Send Welcome Email
+        try {
+            await sendEmail(
+            user.email,
+            "Welcome to Task Management System",
+            `Hello ${user.username},
+            Welcome to the Task Management System.
+            Your account has been created successfully.
+            Regards,
+            Task Management Team`
+        );
+        } catch (error) {
+            res.status(500).json({
+                success:false,
+                message:error.message,
+            });
+        }
 
         res.status(201).json({
             success: true,
@@ -94,6 +116,17 @@ exports.loginUser = async (req, res) => {
             }
         );
 
+        try {
+            await sendEmail(
+                user.email,
+                "Login Alert",
+                `Hello ${user.username},
+                Your account was successfully logged in.`
+            );
+        } catch (err) {
+            console.log("Email Error:", err.message);
+        }
+
         res.status(200).json({
             success: true,
             message: "Login Successful",
@@ -107,23 +140,19 @@ exports.loginUser = async (req, res) => {
     }
 };
 
-exports.getProfile = async (req, res) => {
-    try {
-        res.status(200).json({
-            success: true,
-            user: req.user,
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
-};
 
 exports.logoutUser = async (req, res) => {
     try {
 
+        const token = req.header("Authorization").replace("Bearer ", "");
+
+        const decoded = jwt.decode(token);
+
+        await BlacklistToken.create({
+            token,
+            expiresAt: new Date(decoded.exp*1000)
+        });
+        
         res.status(200).json({
             success: true,
             message: "Logged out successfully",

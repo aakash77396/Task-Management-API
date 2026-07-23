@@ -4,16 +4,20 @@ const { body } = require("express-validator");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
+const {writeLimiter,readLimiter} = require("../middleware/rateLimiter");
 
 const {
     createTask,
     getTasks,
     getTaskById,
     deleteTask,
-    updateTask
+    updateTask,
+    getAssignedTasks
 } = require("../controllers/taskController");
+const { default: rateLimit } = require("express-rate-limit");
 
-router.post("/", authMiddleware, roleMiddleware("Admin", "Manager"),
+// createTask
+router.post("/", authMiddleware, writeLimiter, roleMiddleware("Admin", "Manager"),
     [
         body("title")
             .notEmpty()
@@ -45,11 +49,17 @@ router.post("/", authMiddleware, roleMiddleware("Admin", "Manager"),
     createTask,
 );
 
-router.get("/", authMiddleware, getTasks);
+// getTasks
+router.get("/", authMiddleware, readLimiter, getTasks);
 
-router.get("/:id", authMiddleware, getTaskById);
+// Check assigned task
+router.get("/assigned",authMiddleware,readLimiter,getAssignedTasks) 
 
-router.put("/:id", authMiddleware,
+// getTaskById
+router.get("/:id", authMiddleware, readLimiter, getTaskById);
+
+// updateTask
+router.put("/:id", authMiddleware, writeLimiter,
     [
         body("title")
             .optional()
@@ -79,6 +89,10 @@ router.put("/:id", authMiddleware,
     updateTask,
 );
 
-router.delete("/:id", authMiddleware, roleMiddleware("Admin", "Manager"), deleteTask);
+// deleteTask
+router.delete("/:id", authMiddleware, writeLimiter, roleMiddleware("Admin", "Manager"), deleteTask);
+
+
+
 
 module.exports = router;

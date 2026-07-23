@@ -1,4 +1,5 @@
 const Task = require("../models/Task");
+const User = require("../models/User");
 const { validationResult } = require("express-validator");
 
 exports.createTask = async (req, res) => {
@@ -60,6 +61,26 @@ exports.createTask = async (req, res) => {
 
 exports.getTasks = async (req, res) => {
     try {
+
+        const {status, priority, sortBy, order} = req.query;
+
+        let filter = {};
+        let sort = {};
+
+        // Filter
+        if(status){
+            filter.status=status;
+        }
+
+        if(priority){
+            filter.priority=priority;
+        }
+
+        // Sorting
+        if(sortBy){
+            sort[sortBy] = order === "desc"? -1 :1;
+        }
+
         let tasks;
 
         //Admin
@@ -202,6 +223,41 @@ exports.updateTask = async (req, res) => {
             }
         }
 
+        // Assignment Validation
+        if(req.body.assignedTo){
+
+            const assignedUser = await User.findById(req.body.assignedTo);
+
+            if (!assignedUser) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Assigned user not found"
+                });
+            }
+
+            // Admin cannot assign task to another Admin
+            if(req.user.role === "Admin" &&
+                assignedUser.role === "Admin"
+            ){
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin cannot assign tasks to another Admin"
+                });
+            }
+
+            // Manager can assign only to Users
+            if (
+                req.user.role === "Manager" &&
+                (assignedUser.role === "Admin" ||
+                    assignedUser.role === "Manager")
+            ) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Manager can assign tasks only to Users"
+                });
+            }
+        }
+
         task = await Task.findByIdAndUpdate(req.params.id, req.body,
             {
                 returnDocument: "after",
@@ -265,3 +321,27 @@ exports.deleteTask = async (req, res) => {
         });
     }
 };
+
+exports.getAssignedTasks = async (req,res) =>{
+    try {
+        console.log(req.user._id);
+        const tasks = await Task.find({
+            assignedTo:req.user._id
+        })
+        .populate("createdBy", "username email role")
+        .populate("assignedTo", "username email role");
+
+        res.status(200).json({
+            success: true,
+            count: tasks.length,
+            tasks
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+}

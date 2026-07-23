@@ -5,13 +5,14 @@ const { body } = require("express-validator");
 const {
     registerUser,
     loginUser,
-    getProfile,
     logoutUser
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
 
 const roleMiddleware = require("../middleware/roleMiddleware");
+
+const {loginLimiter} = require("../middleware/rateLimiter");
 
 router.post("/register",
     [
@@ -31,6 +32,7 @@ router.post("/register",
 );
 
 router.post("/login",
+    loginLimiter,
     [
         body("email")
             .isEmail()
@@ -42,7 +44,6 @@ router.post("/login",
     ]
     , loginUser);
 
-router.get("/profile", authMiddleware, getProfile);
 
 router.get("/admin", authMiddleware, roleMiddleware("Admin"), (req, res) => {
     res.json({
