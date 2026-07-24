@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "http://localhost:5001",
-      "description": "Local Server"
+      "url": "https://task-management-api-15dz.onrender.com",
+      "description": "Production Server"
     }
   ],
   "paths": {
