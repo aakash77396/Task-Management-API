@@ -15,16 +15,21 @@ connectDB();
 const app = express();
 app.use(express.json());
 
+// authRoutes
 const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth",authRoutes);
 
+//taskRoutes
 const taskRoutes = require("./routes/taskRoutes");
 app.use("/api/tasks",taskRoutes);
 
+//userRoutes
 const userRoutes = require("./routes/userRoutes");
 app.use("/api/users",userRoutes);
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// swagger
+app.use("/api-docs", swaggerUi.serve);
+app.get("/api-docs", swaggerUi.setup(swaggerDocument));
 
 app.get("/",(req,res)=>{
     res.send("Task-Management-API Running...");
