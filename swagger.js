@@ -1,12 +1,17 @@
-const swaggerAutogen = require("swagger-autogen")();
+const swaggerAutogen = require("swagger-autogen")({ openapi: "3.0.3" });
 
 const doc = {
   info: {
     title: "Task Management API",
     description: "Task Management REST API",
+    version: "1.0.0",
   },
-  host: "localhost:5001",
-  schemes: ["http"],
+  servers: [
+    {
+      url: "http://localhost:5001",
+      description: "Local Server",
+    },
+  ],
 };
 
 const outputFile = "./swagger-output.json";

@@ -99,6 +99,17 @@ task-management-api/
 
 ---
 
+## Assumptions / Design Decisions
+
+- JWT is invalidated using a blacklist collection during logout.
+- MongoDB Atlas is used as the primary database.
+- Passwords are securely hashed using bcryptjs.
+- Authentication is implemented using JWT Bearer Tokens.
+- Role-based access is enforced through middleware.
+- Swagger UI is available at `/api-docs`.
+
+---
+
 # ⚙️ Installation
 
 Clone the repository
